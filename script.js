@@ -12,7 +12,6 @@ keys.addEventListener('click', e => {
   const keyContent = key.textContent;
   const displayedNum = display.textContent;
 
-  // Цифры
   if (!action) {
     if (displayedNum === '0' || waitingForSecond) {
       display.textContent = keyContent;
@@ -23,13 +22,11 @@ keys.addEventListener('click', e => {
     return;
   }
 
-  // Точка
   if (action === 'decimal') {
     if (!displayedNum.includes('.')) display.textContent = displayedNum + '.';
     return;
   }
 
-  // Операторы + - * /
   if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
     firstValue = displayedNum;
     operator = action;
@@ -37,10 +34,11 @@ keys.addEventListener('click', e => {
     return;
   }
 
-  // Равно
   if (action === 'calculate') {
     if (firstValue && operator) {
-      display.textContent = calculate(firstValue, operator, displayedNum);
+      const result = calculate(firstValue, operator, displayedNum);
+      display.textContent = result;
+      saveToHistory(firstValue, operator, displayedNum, result);
       firstValue = '';
       operator = '';
       waitingForSecond = true;
@@ -48,7 +46,6 @@ keys.addEventListener('click', e => {
     return;
   }
 
-  // Очистка
   if (action === 'clear') {
     display.textContent = '0';
     firstValue = '';
@@ -64,4 +61,20 @@ function calculate(n1, operator, n2) {
   if (operator === 'subtract') return a - b;
   if (operator === 'multiply') return a * b;
   if (operator === 'divide') return b === 0 ? 'Ошибка' : a / b;
+}
+
+// ===== «База данных»: localStorage =====
+const DB_KEY = 'calc_history';
+
+function saveToHistory(a, op, b, result) {
+  const history = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
+  history.unshift({
+    id: Date.now(),
+    a: a,
+    operator: op,
+    b: b,
+    result: String(result),
+    createdAt: new Date().toISOString()
+  });
+  localStorage.setItem(DB_KEY, JSON.stringify(history.slice(0, 50)));
 }
